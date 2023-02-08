@@ -9,7 +9,8 @@ import (
 
 func main() {
 	address := "localhost:3000"
-	repo := dataAccess.NewDummyCityData()
+	//dummyRepo := dataAccess.NewDummyCityData()
+	repo := dataAccess.NewDataApiCityData()
 	api := api.CreateApiServer(address, repo)
 	log.Fatal(api.StartApiServer())
 }
