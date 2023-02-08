@@ -23,6 +23,10 @@ func (d *DummyCityRepository) CityByName(cityName string) *City {
 	}
 }
 
+func (d *DummyCityRepository) AllCities() []*City {
+	return []*City{Birmingham(), Mobile()}
+}
+
 func (d *DummyCityRepository) CityByNameYear(cityName string, year int) *AnnualCityData {
 	if city := d.CityByName(cityName); city == nil {
 		return nil

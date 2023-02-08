@@ -4,26 +4,64 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func (a *ApiServer) registerHandlers() {
 	log.Printf("==> Registering handlers for Api Server ... ")
 
-	//http.HandleFunc("/api/{cityName}", a.cityHandler)
-	http.HandleFunc("/api/", a.rootApiHandler)
+	a.router.HandleFunc("/api/city/{cityName}/{year}", a.cityYearHandler)
+	a.router.HandleFunc("/api/city/{cityName}", a.cityHandler)
+	a.router.HandleFunc("/api/city", a.allCitiesHandler).Methods("GET")
+
+	http.Handle("/api/", a.router)
 
 	log.Printf("==> Registering handlers [DONE] ")
 }
 
-func (a *ApiServer) rootApiHandler(w http.ResponseWriter, r *http.Request) {
-	cityName := r.URL.Path[5:]
-	log.Printf("Parameter for cityName: %s", cityName)
+func (a *ApiServer) allCitiesHandler(w http.ResponseWriter, r *http.Request) {
 
-	cr := a.repo.CityByName(cityName)
+	cr := a.cityRepo.AllCities()
 
 	json.NewEncoder(w).Encode(cr)
 }
 
-//func (a *ApiServer) cityHandler(w http.ResponseWriter, r *http.Request) {
-//	//w.Write()"ApiServer Root Handler")
-//}
+func (a *ApiServer) cityHandler(w http.ResponseWriter, r *http.Request) {
+	cityName := mux.Vars(r)["cityName"]
+	if len(cityName) > 0 {
+		result := a.cityRepo.CityByName(cityName)
+		if result != nil {
+			json.NewEncoder(w).Encode(result)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}
+}
+
+func (a *ApiServer) cityYearHandler(w http.ResponseWriter, r *http.Request) {
+	//log.Print("In the cityYear Handler...")
+	cityName := mux.Vars(r)["cityName"]
+	sYear := mux.Vars(r)["year"]
+	if len(cityName) > 0 {
+		result := a.cityRepo.CityByName(cityName)
+		if result != nil {
+			iYear, err := strconv.Atoi(sYear)
+			if err != nil {
+				http.Error(w, "Invalid Request:  Cannot parse Year.", http.StatusBadRequest)
+				return
+			}
+
+			demoData := result.FindDemographicsByYear(iYear)
+			if demoData == nil {
+				http.Error(w, "Year not found for City.", http.StatusNotFound)
+				return
+			}
+			json.NewEncoder(w).Encode(demoData)
+		} else {
+			http.Error(w, "City not found.", http.StatusNotFound)
+			//w.WriteHeader(http.StatusNotFound)
+		}
+	}
+}

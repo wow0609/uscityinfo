@@ -4,18 +4,21 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/wow0609/uscityinfo/dataAccess"
 )
 
 type ApiServer struct {
-	address string
-	repo    dataAccess.CityRepository
+	address  string
+	router   *mux.Router
+	cityRepo dataAccess.CityRepository
 }
 
 func CreateApiServer(serverAddress string, dataAccess dataAccess.CityRepository) *ApiServer {
 	return &ApiServer{
-		address: serverAddress,
-		repo:    dataAccess,
+		address:  serverAddress,
+		cityRepo: dataAccess,
+		router:   mux.NewRouter(),
 	}
 }
 
